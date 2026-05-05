@@ -1,0 +1,45 @@
+project:
+  random_state: 42
+  positive_label: bad
+  precision_floor: 0.60
+
+data:
+  openml_dataset_id: 31
+  openml_dataset_name: credit-g
+  target_column: class
+  raw_path: data/raw/credit_g.csv
+  processed_dir: data/processed
+  test_size: 0.20
+
+training:
+  cv_folds: 5
+  n_jobs: -1
+  scoring: roc_auc
+  max_train_rows: null
+
+models:
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+  random_forest:
+    n_estimators: 300
+    max_depth: null
+    min_samples_leaf: 2
+  lightgbm:
+    n_estimators: 300
+    learning_rate: 0.05
+    num_leaves: 31
+  catboost:
+    iterations: 300
+    learning_rate: 0.05
+    depth: 6
+
+artifacts:
+  dir: artifacts
+  plots_dir: artifacts/plots
+  best_model_path: artifacts/best_model.joblib
+  metrics_path: artifacts/metrics.json
+  cv_results_path: artifacts/cv_results.csv
+  test_metrics_path: artifacts/test_metrics.csv
+  threshold_path: artifacts/thresholds.json
+  feature_importance_path: artifacts/feature_importance.csv
