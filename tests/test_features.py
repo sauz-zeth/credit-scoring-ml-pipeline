@@ -24,3 +24,20 @@ def test_credit_feature_engineer_adds_expected_features() -> None:
     assert transformed.loc[0, "amount_per_month"] == 100
     assert np.isclose(transformed.loc[0, "credit_amount_log1p"], np.log1p(1000))
     assert pd.isna(transformed.loc[1, "amount_per_month"])
+
+
+def test_credit_feature_engineer_returns_feature_names() -> None:
+    data = pd.DataFrame(
+        {
+            "credit_amount": [1000],
+            "duration": [10],
+            "age": [40],
+        }
+    )
+
+    transformer = CreditFeatureEngineer().fit(data)
+    feature_names = transformer.get_feature_names_out()
+
+    assert "credit_amount_log1p" in feature_names
+    assert "amount_per_month" in feature_names
+    assert "duration_to_age" in feature_names
