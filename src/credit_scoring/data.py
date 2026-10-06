@@ -150,10 +150,16 @@ def make_time_split(
     ordered = data.sort_values("issue_d")
     target = target.loc[ordered.index].reset_index(drop=True)
     ordered = ordered.reset_index(drop=True)
-    split_at = max(1, int(len(ordered) * (1 - test_size)))
-    x_train = ordered.iloc[:split_at].drop(columns=["issue_d"])
-    x_test = ordered.iloc[split_at:].drop(columns=["issue_d"])
-    return x_train, x_test, target.iloc[:split_at], target.iloc[split_at:]
+    dates = ordered["issue_d"].drop_duplicates().sort_values().reset_index(drop=True)
+    split_at = min(max(1, int(len(dates) * (1 - test_size))), len(dates) - 1)
+    cutoff = dates.iloc[split_at]
+    train_mask = ordered["issue_d"] < cutoff
+    test_mask = ~train_mask
+    x_train = ordered.loc[train_mask].drop(columns=["issue_d"])
+    x_test = ordered.loc[test_mask].drop(columns=["issue_d"])
+    return x_train, x_test, target.loc[train_mask].reset_index(drop=True), target.loc[
+        test_mask
+    ].reset_index(drop=True)
 
 
 def reduce_memory_usage(data: pd.DataFrame) -> pd.DataFrame:

@@ -28,6 +28,18 @@ def test_make_time_split_keeps_later_rows_in_test() -> None:
     assert y_test.tolist() == [0, 1]
 
 
+def test_make_time_split_does_not_split_same_issue_month_across_sets() -> None:
+    dates = pd.to_datetime(
+        ["2015-01-01", "2015-02-01", "2015-03-01", "2015-03-01", "2015-04-01"]
+    )
+    data = pd.DataFrame({"issue_d": dates, "value": range(len(dates))})
+
+    x_train, x_test, _, _ = make_time_split(data, pd.Series(range(len(dates))), test_size=0.4)
+
+    assert x_train["value"].tolist() == [0, 1]
+    assert x_test["value"].tolist() == [2, 3, 4]
+
+
 def test_reduce_memory_usage_downcasts_numeric_and_categorical_columns() -> None:
     data = pd.DataFrame({"number": [1.0, 2.0], "category": ["a", "b"]})
 
