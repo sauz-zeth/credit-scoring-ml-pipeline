@@ -1,0 +1,83 @@
+dataset: lending_club
+
+project:
+  random_state: 42
+  positive_label: "1"
+  precision_floor: 0.35
+
+data:
+  openml_dataset_id: 31
+  openml_dataset_name: credit-g
+  target_column: target
+  raw_path: data/raw/lending_club/accepted_2007_to_2018Q4.csv.gz
+  processed_dir: data/processed/lending_club
+  test_size: 0.20
+  split_strategy: stratified
+  kaggle_dataset: wordsforthewise/lending-club
+  kaggle_filename: accepted_2007_to_2018Q4.csv.gz
+  feature_whitelist:
+    - loan_amnt
+    - term
+    - int_rate
+    - installment
+    - grade
+    - sub_grade
+    - emp_length
+    - home_ownership
+    - annual_inc
+    - verification_status
+    - purpose
+    - addr_state
+    - dti
+    - delinq_2yrs
+    - earliest_cr_line
+    - fico_range_low
+    - fico_range_high
+    - inq_last_6mths
+    - open_acc
+    - pub_rec
+    - revol_bal
+    - revol_util
+    - total_acc
+    - mort_acc
+    - pub_rec_bankruptcies
+    - application_type
+
+spark:
+  driver_memory: 8g
+  shuffle_partitions: 32
+
+training:
+  cv_folds: 5
+  n_jobs: -1
+  scoring: roc_auc
+  max_train_rows: null
+  random_forest_sample_size: 100000
+  shap_sample_size: 1000
+
+models:
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+  random_forest:
+    n_estimators: 300
+    max_depth: null
+    min_samples_leaf: 2
+  lightgbm:
+    n_estimators: 300
+    learning_rate: 0.05
+    num_leaves: 31
+  catboost:
+    iterations: 300
+    learning_rate: 0.05
+    depth: 6
+
+artifacts:
+  dir: artifacts/lending_club
+  plots_dir: artifacts/lending_club/plots
+  best_model_path: artifacts/lending_club/best_model.joblib
+  metrics_path: artifacts/lending_club/metrics.json
+  cv_results_path: artifacts/lending_club/cv_results.csv
+  test_metrics_path: artifacts/lending_club/test_metrics.csv
+  threshold_path: artifacts/lending_club/thresholds.json
+  feature_importance_path: artifacts/lending_club/feature_importance.csv

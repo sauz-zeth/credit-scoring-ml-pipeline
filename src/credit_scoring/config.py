@@ -22,6 +22,16 @@ class DataConfig:
     raw_path: Path
     processed_dir: Path
     test_size: float
+    split_strategy: str
+    kaggle_dataset: str | None
+    kaggle_filename: str | None
+    feature_whitelist: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SparkConfig:
+    driver_memory: str
+    shuffle_partitions: int
 
 
 @dataclass(frozen=True)
@@ -30,6 +40,8 @@ class TrainingConfig:
     n_jobs: int
     scoring: str
     max_train_rows: int | None
+    random_forest_sample_size: int | None
+    shap_sample_size: int
 
 
 @dataclass(frozen=True)
@@ -46,8 +58,10 @@ class ArtifactsConfig:
 
 @dataclass(frozen=True)
 class Config:
+    dataset: str
     project: ProjectConfig
     data: DataConfig
+    spark: SparkConfig
     training: TrainingConfig
     models: dict[str, dict[str, Any]]
     artifacts: ArtifactsConfig
@@ -62,6 +76,7 @@ def load_config(path: Path = Path("configs/default.yaml")) -> Config:
         raw: dict[str, Any] = yaml.safe_load(file)
 
     return Config(
+        dataset=raw.get("dataset", "german_credit"),
         project=ProjectConfig(**raw["project"]),
         data=DataConfig(
             openml_dataset_id=raw["data"]["openml_dataset_id"],
@@ -70,8 +85,22 @@ def load_config(path: Path = Path("configs/default.yaml")) -> Config:
             raw_path=_as_path(raw["data"]["raw_path"]),
             processed_dir=_as_path(raw["data"]["processed_dir"]),
             test_size=raw["data"]["test_size"],
+            split_strategy=raw["data"].get("split_strategy", "stratified"),
+            kaggle_dataset=raw["data"].get("kaggle_dataset"),
+            kaggle_filename=raw["data"].get("kaggle_filename"),
+            feature_whitelist=tuple(raw["data"].get("feature_whitelist", [])),
         ),
-        training=TrainingConfig(**raw["training"]),
+        spark=SparkConfig(
+            **raw.get("spark", {"driver_memory": "4g", "shuffle_partitions": 8})
+        ),
+        training=TrainingConfig(
+            cv_folds=raw["training"]["cv_folds"],
+            n_jobs=raw["training"]["n_jobs"],
+            scoring=raw["training"]["scoring"],
+            max_train_rows=raw["training"].get("max_train_rows"),
+            random_forest_sample_size=raw["training"].get("random_forest_sample_size"),
+            shap_sample_size=raw["training"].get("shap_sample_size", 200),
+        ),
         models=raw["models"],
         artifacts=ArtifactsConfig(
             dir=_as_path(raw["artifacts"]["dir"]),

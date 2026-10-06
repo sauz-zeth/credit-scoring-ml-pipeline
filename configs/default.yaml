@@ -1,3 +1,5 @@
+dataset: german_credit
+
 project:
   random_state: 42
   positive_label: bad
@@ -10,12 +12,22 @@ data:
   raw_path: data/raw/credit_g.csv
   processed_dir: data/processed
   test_size: 0.20
+  split_strategy: stratified
+  kaggle_dataset: null
+  kaggle_filename: null
+  feature_whitelist: []
+
+spark:
+  driver_memory: 4g
+  shuffle_partitions: 8
 
 training:
   cv_folds: 5
   n_jobs: -1
   scoring: roc_auc
   max_train_rows: null
+  random_forest_sample_size: null
+  shap_sample_size: 200
 
 models:
   logistic_regression:
