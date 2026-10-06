@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold, cross_validate
 
 from credit_scoring.config import Config, ensure_directories
-from credit_scoring.data import load_raw_data, make_train_test_split, save_split
+from credit_scoring.data import load_model_data, load_raw_data, make_train_test_split, save_split
 from credit_scoring.metrics import classification_metrics
 from credit_scoring.models import build_estimators
 from credit_scoring.plots import save_eda_plots
@@ -32,7 +32,12 @@ def _predict_scores(model: Any, x: pd.DataFrame) -> Any:
 
 def train_pipeline(config: Config) -> dict[str, Any]:
     ensure_directories(config)
-    raw_data = load_raw_data(config)
+    if config.dataset == "german_credit":
+        raw_data = load_raw_data(config)
+    else:
+        features, target = load_model_data(config)
+        raw_data = features.copy()
+        raw_data[config.data.target_column] = target
     save_eda_plots(raw_data, config.data.target_column, config.artifacts.plots_dir)
 
     x_train, x_test, y_train, y_test = make_train_test_split(config)
@@ -55,11 +60,21 @@ def train_pipeline(config: Config) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     fitted_models: dict[str, Any] = {}
     for name, estimator in estimators.items():
+        fit_x, fit_y = x_train, y_train
+        if name == "random_forest" and config.training.random_forest_sample_size is not None:
+            sample_size = min(config.training.random_forest_sample_size, len(x_train))
+            sample_index = x_train.sample(
+                n=sample_size,
+                random_state=config.project.random_state,
+            ).index
+            fit_x = x_train.loc[sample_index]
+            fit_y = y_train.loc[sample_index]
+            LOGGER.info("Using %s rows for Random Forest", sample_size)
         LOGGER.info("Cross-validating %s", name)
         scores = cross_validate(
             estimator,
-            x_train,
-            y_train,
+            fit_x,
+            fit_y,
             cv=cv,
             scoring=SCORING,
             n_jobs=1,
@@ -73,7 +88,7 @@ def train_pipeline(config: Config) -> dict[str, Any]:
         rows.append(row)
 
         LOGGER.info("Fitting %s on full training split", name)
-        estimator.fit(x_train, y_train)
+        estimator.fit(fit_x, fit_y)
         fitted_models[name] = estimator
 
     cv_results = pd.DataFrame(rows).sort_values("roc_auc_mean", ascending=False)

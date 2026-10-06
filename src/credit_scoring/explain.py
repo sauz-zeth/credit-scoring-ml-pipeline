@@ -50,12 +50,13 @@ def _shap_importance(model: Any, x_sample: pd.DataFrame) -> pd.DataFrame | None:
         return None
 
 
-def explain_pipeline(config: Config, sample_size: int = 200) -> pd.DataFrame:
+def explain_pipeline(config: Config, sample_size: int | None = None) -> pd.DataFrame:
     ensure_directories(config)
     if not config.artifacts.best_model_path.exists():
         raise FileNotFoundError("Run `uv run credit-scoring train` before explain.")
     x_test, y_test = load_processed_test(config.data.processed_dir)
     model = joblib.load(config.artifacts.best_model_path)
+    sample_size = config.training.shap_sample_size if sample_size is None else sample_size
     x_sample = x_test.sample(
         n=min(sample_size, len(x_test)),
         random_state=config.project.random_state,

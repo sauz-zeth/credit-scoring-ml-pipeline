@@ -174,10 +174,16 @@ def make_train_test_split(
     x, y = load_model_data(config)
     if config.dataset == "lending_club" and config.data.split_strategy == "time":
         data = pd.read_parquet(config.data.processed_dir / "loans.parquet")
-        return make_time_split(
+        x_train, x_test, y_train, y_test = make_time_split(
             data.drop(columns=[config.data.target_column]),
             y,
             config.data.test_size,
+        )
+        return (
+            reduce_memory_usage(x_train),
+            reduce_memory_usage(x_test),
+            y_train,
+            y_test,
         )
     x = reduce_memory_usage(x) if config.dataset == "lending_club" else x
     return train_test_split(

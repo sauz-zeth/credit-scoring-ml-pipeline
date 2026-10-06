@@ -24,6 +24,22 @@ LEAKAGE_PREFIXES = (
     "settlement_",
     "hardship_",
 )
+NUMERIC_FEATURES = {
+    "loan_amnt",
+    "installment",
+    "annual_inc",
+    "dti",
+    "delinq_2yrs",
+    "fico_range_low",
+    "fico_range_high",
+    "inq_last_6mths",
+    "open_acc",
+    "pub_rec",
+    "revol_bal",
+    "total_acc",
+    "mort_acc",
+    "pub_rec_bankruptcies",
+}
 
 
 def _is_leakage_column(name: str) -> bool:
@@ -85,6 +101,8 @@ def prepare_lending_club_dataframe(
             )
         elif name == "emp_length":
             expressions.append(_parsed_emp_length(name).alias(name))
+        elif name in NUMERIC_FEATURES:
+            expressions.append(F.col(name).cast("double").alias(name))
         else:
             expressions.append(F.col(name))
 

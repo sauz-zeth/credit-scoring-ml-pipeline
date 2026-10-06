@@ -61,6 +61,7 @@ def test_prepare_lending_club_filters_statuses_and_parses_values(
 
     assert len(rows) == 2
     assert [row.target for row in rows] == [0, 1]
+    assert rows[0].loan_amnt == 10000.0
     assert rows[0].term == 36
     assert rows[1].term == 60
     assert rows[0].int_rate == 13.5
